@@ -172,3 +172,4 @@ def main():
 if __name__ == '__main__':
     config, device, logger, vdl_writer = program.preprocess()
     main()
+

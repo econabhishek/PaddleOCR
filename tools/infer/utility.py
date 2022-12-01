@@ -144,6 +144,9 @@ def init_args():
 
     parser.add_argument("--show_log", type=str2bool, default=True)
     parser.add_argument("--use_onnx", type=str2bool, default=False)
+
+    parser.add_argument("--input_df",default="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Baseline/city_names.csv")
+    parser.add_argument("--output_df",default="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Baseline/city_names_output.csv")
     return parser
 
 
