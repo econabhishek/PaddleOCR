@@ -14,6 +14,7 @@
 import os
 import sys
 from PIL import Image
+import json
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.insert(0, os.path.abspath(os.path.join(__dir__, '../..')))
@@ -32,6 +33,7 @@ import paddle
 import tools.infer.utility as utility
 from ppocr.postprocess import build_post_process
 from ppocr.utils.logging import get_logger
+from tqdm import tqdm
 # from ppocr.utils.utility import get_image_file_list, check_and_read
 
 ###Import the transform_utils.py file
@@ -177,8 +179,6 @@ class TextRecognizer(object):
             resized_image /= 0.5
             return resized_image
 
-        print(imgC)
-        print(img.shape[2],"check")
 
         assert imgC == img.shape[2]
         imgW = int((imgH * max_wh_ratio))
@@ -423,7 +423,9 @@ class TextRecognizer(object):
                 h, w = img_list[indices[ino]].shape[0:2]
                 wh_ratio = w * 1.0 / h
                 max_wh_ratio = max(max_wh_ratio, wh_ratio)
-            for ino in range(beg_img_no, end_img_no):
+            
+            ##Normalisation
+            for ino in tqdm(range(beg_img_no, end_img_no)):
                 if self.rec_algorithm == "SAR":
                     norm_img, _, _, valid_ratio = self.resize_norm_img_sar(
                         img_list[indices[ino]], self.rec_image_shape)
@@ -493,6 +495,7 @@ class TextRecognizer(object):
             if self.benchmark:
                 self.autolog.times.stamp()
 
+            ##Recognition
             if self.rec_algorithm == "SRN":
                 encoder_word_pos_list = np.concatenate(encoder_word_pos_list)
                 gsrm_word_pos_list = np.concatenate(gsrm_word_pos_list)
@@ -639,7 +642,6 @@ def main(args):
     input_df_path=args.input_df
     input_df=pd.read_csv(input_df_path,encoding='utf-8-sig')
     image_file_list=input_df.image_path.tolist()
-    print(image_file_list)
     ground_truth_list=input_df.ground_truth.tolist()
     text_recognizer = TextRecognizer(args)
     img_list = []
@@ -654,7 +656,7 @@ def main(args):
         for i in range(2):
             res = text_recognizer([img] * int(args.rec_batch_num))
 
-    for image_file in image_file_list:
+    for image_file in tqdm(image_file_list):
         # img, flag, _ = check_and_read(image_file)
         # if not flag:
         img = cv2.imread(image_file)
@@ -686,6 +688,13 @@ def main(args):
     results_df['ground_truth'] = ground_truth_list
 
     ##Save results
+    ##Reporting directory  - the root of the output df
+    reporting_dir = os.path.dirname(args.output_df)
+    ##Create directory if it does not exist
+    if not os.path.exists(reporting_dir):
+        os.makedirs(reporting_dir)
+    
+
     results_df.to_csv(args.output_df,index=False)
 
     ##add file name
@@ -694,15 +703,40 @@ def main(args):
     ##Print rows where result!=ground truth
     error_df=results_df[results_df['result']!=results_df['ground_truth']]
 
-    ##Save error df
-    error_df.to_csv("ocr_errors.csv",index=False,encoding='utf-8-sig')
+    ##Save error df in reporting dir
+    error_df.to_csv(os.path.join(reporting_dir,'error_df.csv'),index=False,encoding='utf-8-sig')
 
 
     ####Homoglyphoc error df - filter error df if len(result)==len(ground_truth)
     hg_error_df=error_df[error_df['result'].apply(lambda x: len(x))==error_df['ground_truth'].apply(lambda x: len(x))]
 
-    ##Save hg error df
-    hg_error_df.to_csv("ocr_hg_errors.csv",index=False,encoding='utf-8-sig')
+    ##Save hg error df in reporting dir
+    hg_error_df.to_csv(os.path.join(reporting_dir,'hg_error_df.csv'),index=False,encoding='utf-8-sig')
+
+    ###Make a dict with results
+    results_dict={}
+    total_accuracy=1- (len(error_df)/len(results_df))
+    total_prop_hg_errors=len(hg_error_df)/len(results_df)
+    prop_hg_errors=len(hg_error_df)/len(error_df)
+    results_dict['total_accuracy']=total_accuracy
+    results_dict['total_prop_hg_errors']=total_prop_hg_errors
+    results_dict['prop_hg_errors']=prop_hg_errors
+    results_dict['total_errors']=len(error_df)
+    results_dict['total_hg_errors']=len(hg_error_df)
+    results_dict['total']=len(results_df)
+
+    ##Save results dict in reporting dir
+    with open(os.path.join(reporting_dir,'results_dict.json'),'w') as f:
+        json.dump(results_dict,f,indent=4)
+
+    ##Print results from results dict
+    print('Total accuracy: {}'.format(total_accuracy))
+    print('Total proportion of homoglyphic errors: {}'.format(total_prop_hg_errors))
+    print('Proportion of homoglyphic errors: {}'.format(prop_hg_errors))
+    print('Total errors: {}'.format(len(error_df)))
+    print('Total homoglyphic errors: {}'.format(len(hg_error_df)))
+    print('Total: {}'.format(len(results_df)))
+
 
 if __name__ == "__main__":
     main(utility.parse_args())

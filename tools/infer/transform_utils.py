@@ -8,6 +8,7 @@ from albumentations.pytorch import ToTensorV2
 import random
 import pandas as pd 
 import json
+from tqdm import tqdm
 
 
 
@@ -65,17 +66,28 @@ def get_render_transform():
 
 if __name__ == "__main__":
     ##Load image df
-    input_df="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Baseline/city_names.csv"
+
+    lang_code="ko"
+    input_df="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Multilang_renders/"+lang_code+"/city_names.csv"
     input_df=pd.read_csv(input_df,encoding='utf-8-sig')
 
+    ##Protopying - take only first 1000 images
+    # input_df=input_df[:400000]
+
     ## output dir
-    output_dir="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Noisy_images/"
+    output_dir="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Noisy_Multilang_renders/"+lang_code+"/"
+        
+
+    ##Create output dir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
 
     ##Create output df
     output_df=pd.DataFrame(columns=["image_path","params","ground_truth"])
     ##Generate noisy images and save to output dir
     param_list=[]
-    for i in range(len(input_df)):
+    for i in tqdm(range(len(input_df))):
         image_path=input_df.iloc[i]["image_path"]
         image_name=image_path.split("/")[-1]
         transform,params=get_render_transform()
@@ -83,13 +95,13 @@ if __name__ == "__main__":
         image=transform(image)
         image.save(os.path.join(output_dir,image_name))
         params["image_name"]=image_name
-        print("Saved image {}".format(image_name))
+        # print("Saved image {}".format(image_name))
         param_list.append(params)
 
         ##Add params to df
         output_df=output_df.append({"image_path":os.path.join(output_dir,image_name),"params":json.dumps(params),"ground_truth":input_df.iloc[i]["ground_truth"]},ignore_index=True)
 
-        
+
     # with open(os.path.join(output_dir,"params.json"), "w") as f:
     #     json.dump(param_list, f, indent=4)
 

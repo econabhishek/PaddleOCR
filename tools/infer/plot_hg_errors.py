@@ -12,10 +12,11 @@ fprop = fm.FontProperties(fname='/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/homog
 
 if __name__ == "__main__":
     ##Load error df
-    error_df="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/ocr_hg_errors.csv"
+    lang_code="ja"
+    error_df="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/multilang_results/"+lang_code+"/hg_error_df.csv"
     error_df=pd.read_csv(error_df,encoding='utf-8-sig')
 
-    image_output_dir="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/homoglyphic_errors/"
+    image_output_dir="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/multilang_results/"+lang_code+"/homoglyphic_error_images/"
 
     ##If output dir does not exist, create it
     if not os.path.exists(image_output_dir):
