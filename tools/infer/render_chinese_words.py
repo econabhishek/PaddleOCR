@@ -92,6 +92,10 @@ if __name__ == "__main__":
     ##Get only the city names
     city_names = df['name'].to_numpy()
 
+    ##Drop city names that have a "/" in them
+    city_names = [x for x in city_names if "/" not in x]
+
+
     city_names=city_names[0:40000]
 
     ##Iterate through the city names and generate images
@@ -111,7 +115,8 @@ if __name__ == "__main__":
         coco_bboxes, canvas = crops_from_text(text, font, font_size=font_size, n=len(text))
         
         # canvas.show()
-        image_path=save_path+city_names[i]+".png"
+        city_file_name=text.replace(" ","_")
+        image_path=save_path+city_file_name+".png"
         
         # canvas.show()
         canvas.save(image_path)
