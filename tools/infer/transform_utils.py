@@ -67,7 +67,7 @@ def get_render_transform():
 if __name__ == "__main__":
     ##Load image df
 
-    lang_code="ko"
+    lang_code="en"
     input_df="/mnt/122a7683-fa4b-45dd-9f13-b18cc4f4a187/PaddleOCR_testing/Paddle_test_images/Multilang_renders/"+lang_code+"/city_names.csv"
     input_df=pd.read_csv(input_df,encoding='utf-8-sig')
 

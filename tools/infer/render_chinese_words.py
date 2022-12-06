@@ -15,7 +15,8 @@ from fontTools.unicode import Unicode
 import pandas as pd
 
 
-def crops_from_text(text, font, font_size=256, n=10,random_size=True,random_scale_canvas=False):
+def crops_from_text(text, font, font_size=256,random_size=True,random_scale_canvas=False):
+    n=len(text)
     
     p = font_size // 25
     crops = []
@@ -94,9 +95,21 @@ if __name__ == "__main__":
 
     ##Drop city names that have a "/" in them
     city_names = [x for x in city_names if "/" not in x]
+    # city_names = [x.split(" ")[0] for x in city_names]
+    # city_names = [x.split(",")[0] for x in city_names]
+    # city_names = [x.split("-")[0] for x in city_names]
+    # city_names = [x.split("/")[0] for x in city_names]
+
+    ###Take unique city names
+    city_names = np.unique(city_names)
+
+    ##Take random sample of 400k city names
+    city_names = np.random.choice(city_names, 400000)
 
 
-    city_names=city_names[0:40000]
+
+
+
 
     ##Iterate through the city names and generate images
     ##Empty result df
