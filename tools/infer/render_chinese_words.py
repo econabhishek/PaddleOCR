@@ -72,6 +72,61 @@ def crops_from_text(text, font, font_size=256,random_size=True,random_scale_canv
     return coco_bboxes, canvas
 
 
+def draw_word_from_text(text,font,font_size):
+    """Draw a word given a text string"""
+    n=len(text)
+    img = Image.new('RGB', (font_size*n, font_size*2), (0,0,0))
+    draw = ImageDraw.Draw(img)
+    draw.text((0,0), text, (255, 255, 255), font=font,anchor='ms')
+
+    # ##Get bb and crop image with that bb
+    # img_copy=img.copy()
+    # ##Invert a copy of the image
+    # img_copy = ImageOps.invert(img_copy)
+
+    # bbox = img.getbbox()
+    # x0,y0,x1,y1 = bbox
+    # # p = font_size // 25
+    # # pbbox = (x0-p,y0-p,x1+p,y1+p)
+
+    # ##Add some padding
+    # p = font_size // 25
+    # pbbox = (x0-p,y0-p,x1+p,y1+p)
+    # crop = img.crop(pbbox)
+
+    # crop=ImageOps.invert(crop)
+
+    return img
+
+
+
+def draw_word_from_text(text,font,font_size):
+    """Draw a word given a text string"""
+    n=len(text)
+    img = Image.new('RGB', (font_size*n*4, font_size*n*4), (255,255,255))
+    draw = ImageDraw.Draw(img)
+    draw.text((font_size*4,font_size*4), text, (0, 0, 0), font=font,anchor='ms',align='center')
+
+    ##Get bb and crop image with that bb
+    img_copy=img.copy()
+    ##Invert a copy of the image
+    img_copy = ImageOps.invert(img_copy)
+
+    bbox = img_copy.getbbox()
+    x0,y0,x1,y1 = bbox
+    # p = font_size // 25
+    # pbbox = (x0-p,y0-p,x1+p,y1+p)
+
+    ##Add some padding
+    p = font_size // 25
+    pbbox = (x0-p,y0-p,x1+p,y1+p)
+    crop = img.crop(pbbox)
+
+
+    return img
+
+
+
 
 
 ##Run as script
@@ -104,9 +159,10 @@ if __name__ == "__main__":
     city_names = np.unique(city_names)
 
     ##Take random sample of 400k city names
-    city_names = np.random.choice(city_names, 400000)
+    city_names = np.random.choice(city_names, 10)
+    font_size=133
 
-
+    font = ImageFont.truetype(font_path, font_size)
 
 
 
@@ -118,15 +174,11 @@ if __name__ == "__main__":
 
         text = city_names[i]
 
-        font_size=133
+       
         
 
-        font = ImageFont.truetype(font_path, font_size)
-
-
-
-        coco_bboxes, canvas = crops_from_text(text, font, font_size=font_size, n=len(text))
-        
+        # coco_bboxes, canvas = crops_from_text(text, font, font_size=font_size)
+        canvas=draw_word_from_text(text,font,font_size)
         # canvas.show()
         city_file_name=text.replace(" ","_")
         image_path=save_path+city_file_name+".png"
